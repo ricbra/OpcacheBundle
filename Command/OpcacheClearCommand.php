@@ -57,7 +57,7 @@ class OpcacheClearCommand extends ContainerAwareCommand
             CURLOPT_SSL_VERIFYPEER  => false
         ));
 
-        $result = curl_exec($ch);
+        $rawResult = curl_exec($ch);
 
         if (curl_errno($ch)) {
             $error = curl_error($ch);
@@ -68,8 +68,12 @@ class OpcacheClearCommand extends ContainerAwareCommand
 
         curl_close($ch);
 
-        $result = json_decode($result, true);
+        $result = json_decode($rawResult, true);
         unlink($file);
+
+        if (! $result) {
+            throw new \RuntimeException(sprintf('The response did not return valid json: %s', $rawResult));
+        }
 
         if($result['success']) {
             $output->writeln($result['message']);
